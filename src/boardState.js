@@ -98,18 +98,15 @@ export const useBoardState = () => {
   const clickCell = (r, c) => {
 
     const cell = cellMatrix[r][c]
-
     const batchIds = [cell.id]
     
     if (!cell.isMine) {
-      const allAdjacent = []
-      findAllAdjacent(r, c, allAdjacent)
+      const allAdjacent = findAllAdjacent(r, c)
       allAdjacent.forEach((adjacentCell) => {
         const { rowIndex, columnIndex } = adjacentCell
         updateCell(rowIndex, columnIndex, {isClicked: true})
       })
       allAdjacent.forEach(c => batchIds.push(c.id))
-      
     }
     batchClick(batchIds)
   }
@@ -149,9 +146,9 @@ export const useBoardState = () => {
     return adjacent
   }
 
-  const findAllAdjacent = (r, c, acc, visited={}, added={}) => {
+  const findAllAdjacent = (r, c, acc=[], visited={}) => {
     const cell = cellMatrix[r][c] 
-    if (cell.id in visited) return
+    if (cell.id in visited) return acc
 
     visited[cell.id] = true
 
@@ -159,17 +156,15 @@ export const useBoardState = () => {
     const hasMinesNearby = adjacent.some(cell => cell.isMine)
 
     if (hasMinesNearby) {
-      return
+      return acc
     } else {
       adjacent.forEach((adjacentCell) => {
         const {id, rowIndex, columnIndex} = adjacentCell
-        if (!(id in added)) {
-          acc.push(adjacentCell)
-          added[id] = true
-          findAllAdjacent(rowIndex, columnIndex, acc, visited, added)
-        }
+          acc.push(adjacentCell)        
+          return findAllAdjacent(rowIndex, columnIndex, acc, visited)
       })
     }
+    return acc
   }
 
   const getNearbyMineCount = (r, c) => {
